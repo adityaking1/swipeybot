@@ -23,6 +23,7 @@ export interface IUser extends Document {
   interest: "pria" | "wanita";
   age: number;
   bio?: string;
+  location?: string;
   photoFileId?: string;
   mediaType?: string;
   dailyLimit: number;
@@ -43,6 +44,7 @@ const UserSchema = new Schema<IUser>({
   interest: { type: String, enum: ["pria", "wanita"], required: true },
   age: { type: Number, required: true },
   bio: String,
+  location: String,
   photoFileId: String,
   mediaType: String,
   dailyLimit: { type: Number, default: 30 },

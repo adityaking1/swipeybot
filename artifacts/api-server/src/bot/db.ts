@@ -27,6 +27,7 @@ export async function createUser(data: {
   interest: "pria" | "wanita";
   age: number;
   bio?: string;
+  location?: string;
   photoFileId?: string;
   mediaType?: string;
   invitedBy?: string;
@@ -52,6 +53,7 @@ export async function updateUser(telegramId: string, data: Partial<{
   interest: "pria" | "wanita";
   age: number;
   bio: string;
+  location: string;
   photoFileId: string;
   mediaType: string;
   username: string;
@@ -98,14 +100,33 @@ export async function getNextCandidate(viewerTelegramId: string, interestedIn: "
   const seenIds = alreadySeen.map(r => r.toUserId);
   seenIds.push(viewerTelegramId);
 
-  const candidates = await UserModel.find({
+  const viewer = await UserModel.findOne({ telegramId: viewerTelegramId }).select("location").lean();
+  const viewerLocation = viewer?.location;
+
+  const baseQuery = {
     gender: interestedIn,
     isActive: true,
     telegramId: { $nin: seenIds },
+  };
+
+  if (viewerLocation) {
+    const sameLocationCandidates = await UserModel.find({
+      ...baseQuery,
+      location: viewerLocation,
+    }).limit(100).lean();
+
+    if (sameLocationCandidates.length > 0) {
+      return sameLocationCandidates[Math.floor(Math.random() * sameLocationCandidates.length)];
+    }
+  }
+
+  const otherCandidates = await UserModel.find({
+    ...baseQuery,
+    ...(viewerLocation ? { location: { $ne: viewerLocation } } : {}),
   }).limit(100).lean();
 
-  if (candidates.length === 0) return null;
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  if (otherCandidates.length === 0) return null;
+  return otherCandidates[Math.floor(Math.random() * otherCandidates.length)];
 }
 
 export async function recordLike(fromUserId: string, toUserId: string, isLike: boolean) {

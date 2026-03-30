@@ -21,6 +21,7 @@ export function formatProfile(user: {
   interest: string;
   age: number;
   bio?: string | null;
+  location?: string | null;
 }): string {
   const genderLabel = user.gender === "pria" ? "🙋‍♂️ Pria" : "🙋‍♀️ Wanita";
   const interestLabel = user.interest === "pria" ? "👨 Pria" : "👩 Wanita";
@@ -29,6 +30,7 @@ export function formatProfile(user: {
     `🎂 Usia: ${user.age} tahun\n` +
     `${genderLabel}\n` +
     `❤️ Tertarik pada: ${interestLabel}\n` +
+    (user.location ? `📍 Lokasi: ${user.location}\n` : "") +
     (user.bio ? `📝 Bio: ${user.bio}` : "")
   );
 }
@@ -425,6 +427,21 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
     case "await_bio": {
       const bio = text === "/skip" ? "" : text;
       setTempData(telegramId, { bio });
+      setState(telegramId, "await_location");
+      await bot.sendMessage(msg.chat.id,
+        `📍 *Lokasi kamu di mana?*\n\nTulis nama kota atau daerahmu (contoh: Jakarta, Bandung, Surabaya)\n\nAtau kirim /skip untuk melewati`,
+        { parse_mode: "Markdown", reply_markup: { remove_keyboard: true } }
+      );
+      break;
+    }
+
+    case "await_location": {
+      const location = text === "/skip" ? "" : text;
+      if (location && location.length > 50) {
+        await bot.sendMessage(msg.chat.id, "Nama lokasi terlalu panjang (maks. 50 karakter).");
+        return;
+      }
+      setTempData(telegramId, { location });
       setState(telegramId, "await_photo");
       await bot.sendMessage(msg.chat.id,
         `📸 *Foto Profil Wajib!*\n\nKirimkan *foto* atau *video* profilmu.\n\nFoto profil diperlukan agar kenalan dapat melihat penampilanmu 😊`,
@@ -451,6 +468,9 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       } else if (text === "📝 Bio") {
         setState(telegramId, "await_edit_bio");
         await bot.sendMessage(msg.chat.id, "Masukkan bio baru:", { reply_markup: { remove_keyboard: true } });
+      } else if (text === "📍 Lokasi") {
+        setState(telegramId, "await_edit_location");
+        await bot.sendMessage(msg.chat.id, "Masukkan lokasi baru (nama kota/daerah):", { reply_markup: { remove_keyboard: true } });
       } else if (text === "📸 Foto/Video") {
         setState(telegramId, "await_edit_photo");
         await bot.sendMessage(msg.chat.id, "Kirimkan foto atau video baru:", { reply_markup: { remove_keyboard: true } });
@@ -485,6 +505,21 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       await updateUser(telegramId, { bio: text });
       setState(telegramId, "idle");
       await bot.sendMessage(msg.chat.id, "✅ Bio berhasil diubah!", { reply_markup: mainMenuKeyboard });
+      break;
+    }
+
+    case "await_edit_location": {
+      if (!text || text.length < 2) {
+        await bot.sendMessage(msg.chat.id, "Nama lokasi terlalu pendek. Masukkan nama kota/daerahmu.");
+        return;
+      }
+      if (text.length > 50) {
+        await bot.sendMessage(msg.chat.id, "Nama lokasi terlalu panjang (maks. 50 karakter).");
+        return;
+      }
+      await updateUser(telegramId, { location: text });
+      setState(telegramId, "idle");
+      await bot.sendMessage(msg.chat.id, "✅ Lokasi berhasil diubah!", { reply_markup: mainMenuKeyboard });
       break;
     }
 
@@ -635,6 +670,7 @@ async function finishRegistration(bot: TelegramBot, msg: TelegramBot.Message, te
     interest: temp.interest as "pria" | "wanita",
     age: parseInt(temp.age),
     bio: temp.bio || undefined,
+    location: temp.location || undefined,
     photoFileId: temp.photoFileId || undefined,
     mediaType: temp.mediaType || undefined,
     invitedBy,
