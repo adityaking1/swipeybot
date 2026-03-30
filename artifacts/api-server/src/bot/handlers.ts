@@ -420,7 +420,7 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       }
       setTempData(telegramId, { age: String(age) });
       setState(telegramId, "await_bio");
-      await bot.sendMessage(msg.chat.id, "Ceritakan sedikit tentang dirimu! ✍️\n\n(Bio — atau kirim /skip untuk melewati)");
+      await bot.sendMessage(msg.chat.id, "Ceritakan sedikit tentang dirimu! ✍️\n\n(Opsional — tulis bio singkatmu)");
       break;
     }
 
@@ -429,7 +429,7 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       setTempData(telegramId, { bio });
       setState(telegramId, "await_location");
       await bot.sendMessage(msg.chat.id,
-        `📍 *Lokasi kamu di mana?*\n\nTulis nama kota atau daerahmu (contoh: Jakarta, Bandung, Surabaya)\n\nAtau kirim /skip untuk melewati`,
+        `📍 *Lokasi kamu di mana?*\n\nTulis nama kota atau daerahmu (contoh: Jakarta, Bandung, Surabaya)`,
         { parse_mode: "Markdown", reply_markup: { remove_keyboard: true } }
       );
       break;
