@@ -51,7 +51,7 @@ export function browsingKeyboard(candidateId: string): TelegramBot.InlineKeyboar
 }
 
 export function shareInviteKeyboard(inviteLink: string, botUsername: string): TelegramBot.InlineKeyboardMarkup {
-  const text = encodeURIComponent(`Hei! Aku main JodohBot, bot kencan seru di Telegram! Yuk bergabung bareng aku di sini 💕`);
+  const text = encodeURIComponent(`Hei! Aku main SwipeyBot, bot kencan seru di Telegram! Yuk bergabung bareng aku di sini 💕`);
   const encodedLink = encodeURIComponent(inviteLink);
   return {
     inline_keyboard: [

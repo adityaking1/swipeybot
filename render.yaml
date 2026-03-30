@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: jodohbot
+    name: swipeybot
     env: node
     plan: free
     buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build

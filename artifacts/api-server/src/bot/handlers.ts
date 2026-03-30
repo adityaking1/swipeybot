@@ -53,7 +53,7 @@ export async function handleStart(bot: TelegramBot, msg: TelegramBot.Message, pa
     setState(telegramId, "idle");
   } else {
     await bot.sendMessage(msg.chat.id,
-      `Halo! Selamat datang di *JodohBot* 💕\n\nAyo cari kenalan baru! Pertama, mari buat profilmu dulu.\n\nSiapa *namamu*?`,
+      `Halo! Selamat datang di *SwipeyBot* 💕\n\nAyo cari kenalan baru! Pertama, mari buat profilmu dulu.\n\nSiapa *namamu*?`,
       { parse_mode: "Markdown", reply_markup: { remove_keyboard: true } }
     );
     setState(telegramId, "await_name");
@@ -306,10 +306,10 @@ export async function handleInvite(bot: TelegramBot, msg: TelegramBot.Message) {
     return;
   }
 
-  let botUsername = "JodohBot";
+  let botUsername = "SwipeyBot";
   try {
     const botInfo = await bot.getMe();
-    botUsername = botInfo.username || "JodohBot";
+    botUsername = botInfo.username || "SwipeyBot";
   } catch {
   }
 

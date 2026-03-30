@@ -1,6 +1,6 @@
-# JodohBot — Telegram Dating Bot
+# SwipeyBot — Telegram Dating Bot
 
-A Telegram-based dating/matchmaking bot (JodohBot) built as a pnpm monorepo. Users interact via Telegram to create profiles, browse matches, like/dislike others, and get connected when there's a mutual match.
+A Telegram-based dating/matchmaking bot (SwipeyBot) built as a pnpm monorepo. Users interact via Telegram to create profiles, browse matches, like/dislike others, and get connected when there's a mutual match.
 
 ## Architecture
 

@@ -78,10 +78,10 @@ export async function startBot() {
       } else if (data === "copy_invite") {
         const telegramId = String(query.from.id);
         const user = await getUser(telegramId);
-        let botUsername = "JodohBot";
+        let botUsername = "SwipeyBot";
         try {
           const botInfo = await bot.getMe();
-          botUsername = botInfo.username || "JodohBot";
+          botUsername = botInfo.username || "SwipeyBot";
         } catch {}
         const inviteLink = user ? `https://t.me/${botUsername}?start=ref_${user.inviteCode}` : "";
         await bot.answerCallbackQuery(query.id, {
