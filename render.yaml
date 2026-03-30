@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: jodohbot
+    env: node
+    plan: free
+    buildCommand: npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
+    startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: ADMIN_TELEGRAM_ID
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
