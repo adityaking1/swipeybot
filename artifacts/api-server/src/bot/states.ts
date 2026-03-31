@@ -13,6 +13,7 @@ export type BotState =
   | "await_edit_bio"
   | "await_edit_location"
   | "await_edit_photo"
+  | "await_edit_gender"
   | "browsing"
   | "await_send_message"
   | "await_report_reason";

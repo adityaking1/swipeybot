@@ -607,10 +607,29 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       } else if (text === "📍 Lokasi") {
         setState(telegramId, "await_edit_location");
         await bot.sendMessage(msg.chat.id, "Masukkan lokasi baru (nama kota/daerah):", { reply_markup: { remove_keyboard: true } });
+      } else if (text === "⚧ Gender") {
+        setState(telegramId, "await_edit_gender");
+        await bot.sendMessage(msg.chat.id, "Pilih gender kamu:", { reply_markup: genderKeyboard });
       } else if (text === "📸 Foto/Video") {
         setState(telegramId, "await_edit_photo");
         await bot.sendMessage(msg.chat.id, "Kirimkan foto atau video baru:", { reply_markup: { remove_keyboard: true } });
       }
+      break;
+    }
+
+    case "await_edit_gender": {
+      let newGender: "pria" | "wanita" | null = null;
+      if (text.includes("Pria") || text.toLowerCase() === "pria") newGender = "pria";
+      if (text.includes("Wanita") || text.toLowerCase() === "wanita") newGender = "wanita";
+      if (!newGender) {
+        await bot.sendMessage(msg.chat.id, "Pilih salah satu:", { reply_markup: genderKeyboard });
+        return;
+      }
+      await updateUser(telegramId, { gender: newGender });
+      setState(telegramId, "idle");
+      const genderLabel = newGender === "pria" ? "🙋‍♂️ Pria" : "🙋‍♀️ Wanita";
+      await bot.sendMessage(msg.chat.id, `✅ Gender berhasil diubah ke *${genderLabel}*!`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard });
       break;
     }
 
