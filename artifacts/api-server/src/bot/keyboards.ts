@@ -4,10 +4,20 @@ export const mainMenuKeyboard: TelegramBot.ReplyKeyboardMarkup = {
   keyboard: [
     [{ text: "👤 Profil Saya" }, { text: "✏️ Ubah Profil" }],
     [{ text: "🚀 Cari Kenalan" }, { text: "📨 Undang Teman" }],
+    [{ text: "🏠 Gabung Group" }],
   ],
   resize_keyboard: true,
   one_time_keyboard: false,
 };
+
+export function groupKeyboard(groupLink: string): TelegramBot.InlineKeyboardMarkup {
+  return {
+    inline_keyboard: [
+      [{ text: "🔗 Buka Group", url: groupLink }],
+      [{ text: "✅ Saya Sudah Gabung — Cek Sekarang", callback_data: "check_group" }],
+    ],
+  };
+}
 
 export const genderKeyboard: TelegramBot.ReplyKeyboardMarkup = {
   keyboard: [

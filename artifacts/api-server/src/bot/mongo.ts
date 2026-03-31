@@ -33,6 +33,7 @@ export interface IUser extends Document {
   invitedBy?: string;
   lastResetDate?: string;
   isActive: boolean;
+  groupBonusClaimed: boolean;
   createdAt: Date;
 }
 
@@ -54,6 +55,7 @@ const UserSchema = new Schema<IUser>({
   invitedBy: String,
   lastResetDate: String,
   isActive: { type: Boolean, default: true },
+  groupBonusClaimed: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

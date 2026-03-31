@@ -3,6 +3,7 @@ import cron from "node-cron";
 import {
   handleStart, handleMessage, handlePhoto, handleVideo,
   handleLikeCallback, handleSendMessageCallback, handleReportCallback,
+  handleCheckGroupCallback,
 } from "./handlers.js";
 import { resetAllDailyLimits, getUser } from "./db.js";
 import { connectMongo } from "./mongo.js";
@@ -74,6 +75,9 @@ export async function startBot() {
       } else if (data.startsWith("report_")) {
         const targetId = data.replace("report_", "");
         await handleReportCallback(bot, query, targetId);
+
+      } else if (data === "check_group") {
+        await handleCheckGroupCallback(bot, query);
 
       } else if (data === "copy_invite") {
         const telegramId = String(query.from.id);

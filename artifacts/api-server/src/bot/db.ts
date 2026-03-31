@@ -184,3 +184,12 @@ export async function saveMessage(fromUserId: string, toUserId: string, content:
   await db();
   await MessageModel.create({ fromUserId, toUserId, content });
 }
+
+export async function claimGroupBonus(telegramId: string) {
+  await db();
+  return UserModel.findOneAndUpdate(
+    { telegramId },
+    { $set: { groupBonusClaimed: true }, $inc: { dailyLimit: 10 } },
+    { new: true }
+  ).lean();
+}

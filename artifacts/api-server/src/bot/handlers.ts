@@ -3,7 +3,7 @@ import {
   getUser, createUser, updateUser, getNextCandidate,
   recordLike, checkMutualLike, createMatch, checkAndResetDailyLimit,
   incrementDailyUsed, addInviteLimit, getUserByInviteCode, hasAlreadyLiked,
-  saveMessage,
+  saveMessage, claimGroupBonus,
 } from "./db.js";
 import {
   getState, setState, getTempData, setTempData, clearTempData,
@@ -11,6 +11,7 @@ import {
 import {
   mainMenuKeyboard, genderKeyboard, interestKeyboard,
   editProfileKeyboard, browsingKeyboard, shareInviteKeyboard, cancelKeyboard,
+  groupKeyboard,
 } from "./keyboards.js";
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID || "";
@@ -332,6 +333,98 @@ export async function handleInvite(bot: TelegramBot, msg: TelegramBot.Message) {
   );
 }
 
+export async function handleJoinGroup(bot: TelegramBot, msg: TelegramBot.Message) {
+  const telegramId = String(msg.from!.id);
+  const user = await getUser(telegramId);
+
+  if (!user) {
+    await bot.sendMessage(msg.chat.id, "Kamu belum punya profil. Kirim /start untuk membuat profil.");
+    return;
+  }
+
+  const groupLink = process.env.TELEGRAM_GROUP_LINK || "";
+
+  if (!groupLink) {
+    await bot.sendMessage(msg.chat.id, "Fitur group belum dikonfigurasi. Hubungi admin.");
+    return;
+  }
+
+  if (user.groupBonusClaimed) {
+    await bot.sendMessage(msg.chat.id,
+      `✅ *Kamu sudah mendapatkan bonus group!*\n\n` +
+      `🎁 +10 limit sudah ditambahkan ke akunmu sebelumnya.\n` +
+      `📋 Limit harian saat ini: *${user.dailyLimit}* profil/hari`,
+      { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+    );
+    return;
+  }
+
+  await bot.sendMessage(msg.chat.id,
+    `🏠 *Gabung Group SwipeyBot!*\n\n` +
+    `Dapatkan *+10 limit harian* gratis dengan bergabung ke group komunitas kami!\n\n` +
+    `📋 Caranya:\n` +
+    `1️⃣ Klik tombol *Buka Group* di bawah\n` +
+    `2️⃣ Bergabung ke group\n` +
+    `3️⃣ Kembali ke sini & klik *Saya Sudah Gabung*\n\n` +
+    `🎁 Bonus: *+10 limit/hari* langsung aktif!`,
+    { parse_mode: "Markdown", reply_markup: groupKeyboard(groupLink) }
+  );
+}
+
+export async function handleCheckGroupCallback(bot: TelegramBot, query: TelegramBot.CallbackQuery) {
+  const telegramId = String(query.from.id);
+  const chatId = query.message!.chat.id;
+
+  await bot.answerCallbackQuery(query.id);
+
+  const user = await getUser(telegramId);
+  if (!user) {
+    await bot.sendMessage(chatId, "Profil tidak ditemukan. Kirim /start untuk membuat profil.");
+    return;
+  }
+
+  if (user.groupBonusClaimed) {
+    await bot.sendMessage(chatId,
+      `✅ Kamu sudah pernah klaim bonus group sebelumnya.\n\nLimit harian kamu: *${user.dailyLimit}* profil/hari`,
+      { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+    );
+    return;
+  }
+
+  const groupId = process.env.TELEGRAM_GROUP_ID || "";
+  if (!groupId) {
+    await bot.sendMessage(chatId, "Konfigurasi group belum lengkap. Hubungi admin.");
+    return;
+  }
+
+  try {
+    const member = await bot.getChatMember(groupId, query.from.id);
+    const validStatuses = ["member", "administrator", "creator"];
+
+    if (validStatuses.includes(member.status)) {
+      await claimGroupBonus(telegramId);
+      await bot.sendMessage(chatId,
+        `🎉 *Berhasil! Bonus group aktif!*\n\n` +
+        `✅ Keanggotaan grupmu terverifikasi.\n` +
+        `🎁 *+10 limit harian* sudah ditambahkan!\n` +
+        `📋 Limit harian kamu sekarang: *${user.dailyLimit + 10}* profil/hari`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+      );
+    } else {
+      const groupLink = process.env.TELEGRAM_GROUP_LINK || "";
+      await bot.sendMessage(chatId,
+        `❌ *Kamu belum bergabung ke group.*\n\nPastikan kamu sudah join group, lalu coba lagi.`,
+        { parse_mode: "Markdown", reply_markup: groupLink ? groupKeyboard(groupLink) : undefined }
+      );
+    }
+  } catch {
+    await bot.sendMessage(chatId,
+      `⚠️ Gagal memverifikasi keanggotaan. Pastikan kamu sudah bergabung ke group dan coba lagi.`,
+      { reply_markup: mainMenuKeyboard }
+    );
+  }
+}
+
 export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) {
   if (!msg.from || (!msg.text && !msg.photo && !msg.video)) return;
 
@@ -363,6 +456,11 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
 
   if (msg.text === "📨 Undang Teman") {
     await handleInvite(bot, msg);
+    return;
+  }
+
+  if (msg.text === "🏠 Gabung Group") {
+    await handleJoinGroup(bot, msg);
     return;
   }
 
