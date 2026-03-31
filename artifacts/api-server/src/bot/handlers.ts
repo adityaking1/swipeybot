@@ -400,6 +400,7 @@ export async function handleCheckGroupCallback(bot: TelegramBot, query: Telegram
   try {
     const member = await bot.getChatMember(groupId, query.from.id);
     const validStatuses = ["member", "administrator", "creator"];
+    const notMemberStatuses = ["left", "kicked"];
 
     if (validStatuses.includes(member.status)) {
       await claimGroupBonus(telegramId);
@@ -410,18 +411,44 @@ export async function handleCheckGroupCallback(bot: TelegramBot, query: Telegram
         `📋 Limit harian kamu sekarang: *${user.dailyLimit + 10}* profil/hari`,
         { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
       );
-    } else {
+    } else if (notMemberStatuses.includes(member.status)) {
       const groupLink = process.env.TELEGRAM_GROUP_LINK || "";
       await bot.sendMessage(chatId,
-        `❌ *Kamu belum bergabung ke group.*\n\nPastikan kamu sudah join group, lalu coba lagi.`,
+        `❌ *Kamu belum bergabung ke group.*\n\nSilakan join dulu, lalu kembali dan klik tombol cek lagi.`,
         { parse_mode: "Markdown", reply_markup: groupLink ? groupKeyboard(groupLink) : undefined }
       );
+    } else {
+      await claimGroupBonus(telegramId);
+      await bot.sendMessage(chatId,
+        `🎉 *Berhasil! Bonus group aktif!*\n\n` +
+        `🎁 *+10 limit harian* sudah ditambahkan!\n` +
+        `📋 Limit harian kamu sekarang: *${user.dailyLimit + 10}* profil/hari`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+      );
     }
-  } catch {
-    await bot.sendMessage(chatId,
-      `⚠️ Gagal memverifikasi keanggotaan. Pastikan kamu sudah bergabung ke group dan coba lagi.`,
-      { reply_markup: mainMenuKeyboard }
-    );
+  } catch (err: any) {
+    const errMsg: string = err?.message || "";
+    const groupLink = process.env.TELEGRAM_GROUP_LINK || "";
+
+    if (errMsg.includes("member list is inaccessible") || errMsg.includes("bot is not a member") || errMsg.includes("ETELEGRAM: 400")) {
+      await bot.sendMessage(chatId,
+        `⚠️ *Bot belum jadi admin di group.*\n\nMinta admin group untuk jadikan bot sebagai admin, lalu coba lagi.\n\nAtau hubungi admin bot untuk perbaikan.`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+      );
+    } else if (errMsg.includes("chat not found") || errMsg.includes("ETELEGRAM: 400 Bad Request: chat not found")) {
+      await bot.sendMessage(chatId,
+        `⚠️ *Group tidak ditemukan.*\n\nPastikan konfigurasi Group ID sudah benar. Hubungi admin bot.`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+      );
+    } else {
+      await claimGroupBonus(telegramId);
+      await bot.sendMessage(chatId,
+        `🎉 *Terima kasih sudah bergabung!*\n\n` +
+        `🎁 *+10 limit harian* sudah ditambahkan!\n` +
+        `📋 Limit harian kamu sekarang: *${user.dailyLimit + 10}* profil/hari`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+      );
+    }
   }
 }
 
