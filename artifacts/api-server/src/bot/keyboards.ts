@@ -39,7 +39,8 @@ export const editProfileKeyboard: TelegramBot.ReplyKeyboardMarkup = {
   keyboard: [
     [{ text: "✏️ Nama" }, { text: "🎂 Usia" }],
     [{ text: "📝 Bio" }, { text: "📍 Lokasi" }],
-    [{ text: "⚧ Gender" }, { text: "📸 Foto/Video" }],
+    [{ text: "⚧ Gender" }, { text: "💘 Tertarik Kepada" }],
+    [{ text: "📸 Foto/Video" }],
     [{ text: "🔙 Kembali" }],
   ],
   resize_keyboard: true,

@@ -610,6 +610,9 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       } else if (text === "⚧ Gender") {
         setState(telegramId, "await_edit_gender");
         await bot.sendMessage(msg.chat.id, "Pilih gender kamu:", { reply_markup: genderKeyboard });
+      } else if (text === "💘 Tertarik Kepada") {
+        setState(telegramId, "await_edit_interest");
+        await bot.sendMessage(msg.chat.id, "Kamu tertarik pada siapa?", { reply_markup: interestKeyboard });
       } else if (text === "📸 Foto/Video") {
         setState(telegramId, "await_edit_photo");
         await bot.sendMessage(msg.chat.id, "Kirimkan foto atau video baru:", { reply_markup: { remove_keyboard: true } });
@@ -629,6 +632,22 @@ export async function handleMessage(bot: TelegramBot, msg: TelegramBot.Message) 
       setState(telegramId, "idle");
       const genderLabel = newGender === "pria" ? "🙋‍♂️ Pria" : "🙋‍♀️ Wanita";
       await bot.sendMessage(msg.chat.id, `✅ Gender berhasil diubah ke *${genderLabel}*!`,
+        { parse_mode: "Markdown", reply_markup: mainMenuKeyboard });
+      break;
+    }
+
+    case "await_edit_interest": {
+      let newInterest: "pria" | "wanita" | null = null;
+      if (text.includes("Pria") || text.toLowerCase().includes("pria")) newInterest = "pria";
+      if (text.includes("Wanita") || text.toLowerCase().includes("wanita")) newInterest = "wanita";
+      if (!newInterest) {
+        await bot.sendMessage(msg.chat.id, "Pilih salah satu:", { reply_markup: interestKeyboard });
+        return;
+      }
+      await updateUser(telegramId, { interest: newInterest });
+      setState(telegramId, "idle");
+      const interestLabel = newInterest === "pria" ? "👨 Pria" : "👩 Wanita";
+      await bot.sendMessage(msg.chat.id, `✅ Ketertarikan berhasil diubah ke *${interestLabel}*!`,
         { parse_mode: "Markdown", reply_markup: mainMenuKeyboard });
       break;
     }
