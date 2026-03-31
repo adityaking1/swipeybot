@@ -1,4 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
+import { logger } from "../lib/logger.js";
 import {
   getUser, createUser, updateUser, getNextCandidate,
   recordLike, checkMutualLike, createMatch, checkAndResetDailyLimit,
@@ -428,19 +429,26 @@ export async function handleCheckGroupCallback(bot: TelegramBot, query: Telegram
     }
   } catch (err: any) {
     const errMsg: string = err?.message || "";
-    const groupLink = process.env.TELEGRAM_GROUP_LINK || "";
+    logger.error({ err, groupId, userId: query.from.id }, "getChatMember failed");
 
-    if (errMsg.includes("member list is inaccessible") || errMsg.includes("bot is not a member") || errMsg.includes("ETELEGRAM: 400")) {
+    if (errMsg.includes("member list is inaccessible") || errMsg.includes("not enough rights")) {
       await bot.sendMessage(chatId,
-        `⚠️ *Bot belum jadi admin di group.*\n\nMinta admin group untuk jadikan bot sebagai admin, lalu coba lagi.\n\nAtau hubungi admin bot untuk perbaikan.`,
+        `⚠️ *Bot belum jadi admin di group.*\n\nMinta admin group jadikan bot sebagai admin, lalu coba lagi.`,
         { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
       );
-    } else if (errMsg.includes("chat not found") || errMsg.includes("ETELEGRAM: 400 Bad Request: chat not found")) {
+    } else if (errMsg.includes("chat not found") || errMsg.includes("PEER_ID_INVALID")) {
       await bot.sendMessage(chatId,
-        `⚠️ *Group tidak ditemukan.*\n\nPastikan konfigurasi Group ID sudah benar. Hubungi admin bot.`,
+        `⚠️ *Group tidak ditemukan.*\n\nKonfigurasi Group ID salah. Hubungi admin bot.`,
         { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
+      );
+    } else if (errMsg.includes("user not found") || errMsg.includes("participant_id_invalid")) {
+      const groupLink = process.env.TELEGRAM_GROUP_LINK || "";
+      await bot.sendMessage(chatId,
+        `❌ *Kamu belum bergabung ke group.*\n\nSilakan join dulu, lalu klik tombol cek lagi.`,
+        { parse_mode: "Markdown", reply_markup: groupLink ? groupKeyboard(groupLink) : undefined }
       );
     } else {
+      logger.error({ errMsg }, "Unhandled getChatMember error, granting bonus anyway");
       await claimGroupBonus(telegramId);
       await bot.sendMessage(chatId,
         `🎉 *Terima kasih sudah bergabung!*\n\n` +
