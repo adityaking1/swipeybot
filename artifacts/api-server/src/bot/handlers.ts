@@ -192,6 +192,40 @@ export async function sendNextCandidate(
   }
 }
 
+async function sendLikerNotification(bot: TelegramBot, likerId: string, targetId: string) {
+  try {
+    const liker = await getUser(likerId);
+    if (!liker) return;
+
+    const caption =
+      `❤️ *Kamu punya like baru!*\n\n` +
+      `Seseorang menyukai profilmu. Berikut profilnya:\n\n` +
+      formatProfile(liker);
+
+    if (liker.photoFileId) {
+      if (liker.mediaType === "video") {
+        await bot.sendVideo(Number(targetId), liker.photoFileId, {
+          caption,
+          parse_mode: "Markdown",
+          reply_markup: browsingKeyboard(likerId),
+        });
+      } else {
+        await bot.sendPhoto(Number(targetId), liker.photoFileId, {
+          caption,
+          parse_mode: "Markdown",
+          reply_markup: browsingKeyboard(likerId),
+        });
+      }
+    } else {
+      await bot.sendMessage(Number(targetId), caption, {
+        parse_mode: "Markdown",
+        reply_markup: browsingKeyboard(likerId),
+      });
+    }
+  } catch {
+  }
+}
+
 export async function handleLikeCallback(
   bot: TelegramBot,
   query: TelegramBot.CallbackQuery,
@@ -247,6 +281,7 @@ export async function handleLikeCallback(
       return;
     } else {
       await bot.sendMessage(chatId, "❤️ Kamu menyukai profil ini! Nantikan jika mereka membalasnya~");
+      await sendLikerNotification(bot, telegramId, targetId);
     }
   } else {
     await bot.sendMessage(chatId, "👎 Dilewati.");
