@@ -392,11 +392,14 @@ export async function handleCheckGroupCallback(bot: TelegramBot, query: Telegram
     return;
   }
 
-  const groupId = process.env.TELEGRAM_GROUP_ID || "";
-  if (!groupId) {
+  const rawGroupId = process.env.TELEGRAM_GROUP_ID || "";
+  if (!rawGroupId) {
     await bot.sendMessage(chatId, "Konfigurasi group belum lengkap. Hubungi admin.");
     return;
   }
+  const groupId = rawGroupId.startsWith("-") || rawGroupId.startsWith("@")
+    ? rawGroupId
+    : `@${rawGroupId}`;
 
   try {
     const member = await bot.getChatMember(groupId, query.from.id);
