@@ -185,6 +185,11 @@ export async function saveMessage(fromUserId: string, toUserId: string, content:
   await MessageModel.create({ fromUserId, toUserId, content });
 }
 
+export async function getTotalUserCount(): Promise<number> {
+  await db();
+  return UserModel.countDocuments({});
+}
+
 export async function claimGroupBonus(telegramId: string) {
   await db();
   return UserModel.findOneAndUpdate(

@@ -4,8 +4,9 @@ import {
   getUser, createUser, updateUser, getNextCandidate,
   recordLike, checkMutualLike, createMatch, checkAndResetDailyLimit,
   incrementDailyUsed, addInviteLimit, getUserByInviteCode, hasAlreadyLiked,
-  saveMessage, claimGroupBonus,
+  saveMessage, claimGroupBonus, getTotalUserCount,
 } from "./db.js";
+
 import {
   getState, setState, getTempData, setTempData, clearTempData,
 } from "./states.js";
@@ -16,6 +17,11 @@ import {
 } from "./keyboards.js";
 
 const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID || "";
+const FAKE_MEMBER_BASE = 10_000;
+
+function formatMemberCount(count: number): string {
+  return count.toLocaleString("id-ID");
+}
 
 export function formatProfile(user: {
   name: string;
@@ -40,7 +46,8 @@ export function formatProfile(user: {
 export async function handleStart(bot: TelegramBot, msg: TelegramBot.Message, payload?: string) {
   const telegramId = String(msg.from!.id);
 
-  const user = await getUser(telegramId);
+  const [user, realCount] = await Promise.all([getUser(telegramId), getTotalUserCount()]);
+  const memberCount = formatMemberCount(FAKE_MEMBER_BASE + realCount);
 
   if (payload && payload.startsWith("ref_")) {
     const inviteCode = payload.replace("ref_", "");
@@ -51,13 +58,13 @@ export async function handleStart(bot: TelegramBot, msg: TelegramBot.Message, pa
 
   if (user) {
     await bot.sendMessage(msg.chat.id,
-      `Selamat datang kembali, *${user.name}*! 👋\n\nGunakan menu di bawah untuk mulai.`,
+      `Selamat datang kembali, *${user.name}*! 👋\n\n👥 *${memberCount} anggota* sudah bergabung di SwipeyBot!\n\nGunakan menu di bawah untuk mulai.`,
       { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
     );
     setState(telegramId, "idle");
   } else {
     await bot.sendMessage(msg.chat.id,
-      `Halo! Selamat datang di *SwipeyBot* 💕\n\nAyo cari kenalan baru! Pertama, mari buat profilmu dulu.\n\nSiapa *namamu*?`,
+      `Halo! Selamat datang di *SwipeyBot* 💕\n\n👥 Bergabunglah bersama *${memberCount} anggota* yang sudah menemukan kenalan baru!\n\nAyo buat profilmu dulu.\n\nSiapa *namamu*?`,
       { parse_mode: "Markdown", reply_markup: { remove_keyboard: true } }
     );
     setState(telegramId, "await_name");
