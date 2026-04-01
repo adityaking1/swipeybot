@@ -28,6 +28,7 @@ A Telegram-based dating/matchmaking bot (SwipeyBot) built as a pnpm monorepo. Us
 |---|---|
 | `TELEGRAM_BOT_TOKEN` | Bot token from @BotFather |
 | `MONGODB_URI` | MongoDB Atlas connection string |
+| `WEBHOOK_URL` | Public URL of your server (e.g. `https://yourapp.fps.ms`) — required for webhook mode |
 | `ADMIN_TELEGRAM_ID` | Telegram user ID for admin notifications |
 | `SESSION_SECRET` | Random session secret |
 | `PORT` | Server port (set to 5000) |

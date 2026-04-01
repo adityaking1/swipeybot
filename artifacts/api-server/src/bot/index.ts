@@ -9,7 +9,13 @@ import { resetAllDailyLimits, getUser } from "./db.js";
 import { connectMongo } from "./mongo.js";
 import { logger } from "../lib/logger.js";
 
-export async function startBot() {
+let botInstance: TelegramBot | null = null;
+
+export function getBot(): TelegramBot | null {
+  return botInstance;
+}
+
+export async function startBot(): Promise<TelegramBot | undefined> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
     logger.error("TELEGRAM_BOT_TOKEN is not set!");
@@ -23,9 +29,10 @@ export async function startBot() {
     return;
   }
 
-  const bot = new TelegramBot(token, { polling: true });
+  const bot = new TelegramBot(token, { polling: false });
+  botInstance = bot;
 
-  logger.info("Telegram bot started with polling");
+  logger.info("Telegram bot initialized in webhook mode");
 
   bot.onText(/\/start(.*)/, async (msg, match) => {
     const payload = match?.[1]?.trim() || "";
@@ -101,10 +108,6 @@ export async function startBot() {
     }
   });
 
-  bot.on("polling_error", (err) => {
-    logger.error({ err }, "Polling error");
-  });
-
   cron.schedule("0 0 * * *", async () => {
     logger.info("Running daily limit reset...");
     try {
@@ -116,4 +119,16 @@ export async function startBot() {
   }, { timezone: "Asia/Jakarta" });
 
   return bot;
+}
+
+export async function registerWebhook(webhookUrl: string): Promise<void> {
+  if (!botInstance) return;
+  const token = process.env.TELEGRAM_BOT_TOKEN!;
+  const fullUrl = `${webhookUrl}/webhook/${token}`;
+  try {
+    await botInstance.setWebHook(fullUrl);
+    logger.info({ url: fullUrl }, "Webhook registered successfully");
+  } catch (err) {
+    logger.error({ err }, "Failed to register webhook");
+  }
 }

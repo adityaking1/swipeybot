@@ -1,6 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { startBot } from "./bot/index.js";
+import { startBot, registerWebhook } from "./bot/index.js";
 
 const rawPort = process.env["PORT"];
 
@@ -16,12 +16,27 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
+app.listen(port, async (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
   }
 
   logger.info({ port }, "Server listening");
-  startBot().catch(err => logger.error({ err }, "Bot startup failed"));
+
+  try {
+    await startBot();
+
+    const webhookUrl = process.env.WEBHOOK_URL;
+    if (webhookUrl) {
+      await registerWebhook(webhookUrl);
+    } else {
+      logger.warn(
+        "WEBHOOK_URL is not set — webhook not registered. " +
+        "Set WEBHOOK_URL to your public server URL (e.g. https://yourapp.fps.ms) to enable webhook mode."
+      );
+    }
+  } catch (err) {
+    logger.error({ err }, "Bot startup failed");
+  }
 });
