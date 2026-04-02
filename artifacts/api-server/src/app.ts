@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import router from "./routes";
 import webhookRouter from "./routes/webhook.js";
+import adminRouter from "./routes/admin.js";
 import { logger } from "./lib/logger";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -36,6 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(webhookRouter);
 app.use("/api", router);
+app.use("/api/admin", adminRouter);
 
 const publicDir = path.join(__dirname, "../public");
 app.use(express.static(publicDir));

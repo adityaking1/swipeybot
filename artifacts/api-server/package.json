@@ -19,11 +19,12 @@
     "mongoose": "^9.3.3",
     "node-cron": "^4.2.1",
     "node-telegram-bot-api": "^0.67.0",
+    "jsonwebtoken": "^9.0.2",
     "pino": "^9",
-    "pino-http": "^10",
-    "socket.io": "^4.8.1"
+    "pino-http": "^10"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
