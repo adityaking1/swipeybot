@@ -7,7 +7,7 @@ A Telegram-based dating/matchmaking bot (SwipeyBot) + Random Chat web app, built
 **Monorepo structure managed with pnpm workspaces:**
 
 - `artifacts/api-server/` — Core service: Express API + Telegram bot (webhook) + Socket.io random chat
-- `artifacts/web-client/` — React + Vite frontend for Random Chat (served from Express in production)
+- `artifacts/web-client/` — React + Vite frontend for Random Chat / Admin Dashboard (served from Express in production)
 - `lib/db/` — Shared Drizzle ORM schema & PostgreSQL connection
 - `lib/api-zod/` — Shared Zod validation schemas
 
@@ -32,26 +32,30 @@ A Telegram-based dating/matchmaking bot (SwipeyBot) + Random Chat web app, built
 | `WEBHOOK_URL` | Public URL of your server (e.g. `https://yourapp.fps.ms`) — required for webhook mode |
 | `ADMIN_TELEGRAM_ID` | Telegram user ID for admin notifications |
 | `SESSION_SECRET` | Random session secret |
-| `PORT` | Server port (set to 5000) |
+| `PORT` | Server port (default 3000 in dev, 5000 in production) |
 
-## Running the App
+## Development
+
+The workflow **"Start application"** runs `bash start-dev.sh` which:
+1. Builds the API server with esbuild
+2. Starts the API server on port 3000
+3. Starts the Vite dev server (web-client) on port 5000
+
+Frontend is proxied through Vite to the API at `/api` and `/socket.io`.
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Build api-server
-cd artifacts/api-server && node ./build.mjs
-
-# Start server
-node --enable-source-maps ./dist/index.mjs
+# Run in development (both services)
+bash start-dev.sh
 ```
-
-The workflow **"Start application"** runs: `cd artifacts/api-server && pnpm run start`
 
 ## Deployment
 
 Configured as a **VM (always-on)** deployment — required because the Telegram bot uses long-polling and must stay running continuously.
 
-- **Build:** `cd artifacts/api-server && node ./build.mjs`
-- **Run:** `cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs`
+- **Build:** Builds api-server (esbuild) and web-client (Vite → outputs to `artifacts/api-server/public/`)
+- **Run:** `cd artifacts/api-server && PORT=5000 node --enable-source-maps ./dist/index.mjs`
+
+In production, the Express server serves the built frontend static files from `public/` and handles all API routes.
