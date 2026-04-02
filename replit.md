@@ -1,12 +1,13 @@
-# SwipeyBot — Telegram Dating Bot
+# SwipeyBot — Telegram Dating Bot + Random Chat Web
 
-A Telegram-based dating/matchmaking bot (SwipeyBot) built as a pnpm monorepo. Users interact via Telegram to create profiles, browse matches, like/dislike others, and get connected when there's a mutual match.
+A Telegram-based dating/matchmaking bot (SwipeyBot) + Random Chat web app, built as a pnpm monorepo.
 
 ## Architecture
 
 **Monorepo structure managed with pnpm workspaces:**
 
-- `artifacts/api-server/` — Core service: Express API + Telegram bot (long-polling)
+- `artifacts/api-server/` — Core service: Express API + Telegram bot (webhook) + Socket.io random chat
+- `artifacts/web-client/` — React + Vite frontend for Random Chat (served from Express in production)
 - `lib/db/` — Shared Drizzle ORM schema & PostgreSQL connection
 - `lib/api-zod/` — Shared Zod validation schemas
 

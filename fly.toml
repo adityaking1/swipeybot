@@ -3,6 +3,7 @@ app = "swipeybot"
 primary_region = "sin"
 
 [build]
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8080"

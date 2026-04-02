@@ -8,8 +8,11 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY tsconfig.json tsconfig.base.json ./
 COPY lib/ ./lib/
 COPY artifacts/api-server/ ./artifacts/api-server/
+COPY artifacts/web-client/ ./artifacts/web-client/
 
 RUN pnpm install --frozen-lockfile
+
+RUN cd artifacts/web-client && pnpm run build
 
 RUN cd artifacts/api-server && node ./build.mjs
 
