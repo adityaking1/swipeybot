@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 const mongoose = require("/home/runner/workspace/artifacts/api-server/node_modules/mongoose");
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID;
+const ADMIN_ID = (process.env.ADMIN_TELEGRAM_ID || "").trim();
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!token || !ADMIN_ID || !MONGODB_URI) {
@@ -105,9 +105,10 @@ for (const user of fakeUsers) {
 
   process.stdout.write(`  [${user.telegramId}] ${user.name} (${user.gender}) → uploading... `);
 
-  // Send photo via URL to admin's chat
+  // Send photo via URL to group (bot can always send there)
+  const GROUP_ID = "-1003704727300";
   const res = await apiPost("sendPhoto", {
-    chat_id: ADMIN_ID,
+    chat_id: GROUP_ID,
     photo: photoUrl,
     caption: `[seed] ${user.name}`,
   });
@@ -123,8 +124,8 @@ for (const user of fakeUsers) {
 
     console.log(`✅ file_id saved`);
 
-    // Clean up: delete the photo from admin's chat
-    await apiPost("deleteMessage", { chat_id: ADMIN_ID, message_id: sentMsgId });
+    // Clean up: delete the photo from group
+    await apiPost("deleteMessage", { chat_id: GROUP_ID, message_id: sentMsgId });
 
     success++;
   } else {

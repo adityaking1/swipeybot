@@ -17,7 +17,7 @@ import {
   groupKeyboard,
 } from "./keyboards.js";
 
-const ADMIN_ID = process.env.ADMIN_TELEGRAM_ID || "";
+const ADMIN_ID = (process.env.ADMIN_TELEGRAM_ID || "").trim();
 const FAKE_MEMBER_BASE = 10_000;
 
 function formatMemberCount(count: number): string {
