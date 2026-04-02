@@ -31,6 +31,7 @@ A Telegram-based dating/matchmaking bot (SwipeyBot), built as a pnpm monorepo.
 | `WEBHOOK_URL` | Public URL of your server — required for webhook mode |
 | `ADMIN_TELEGRAM_ID` | Telegram user ID for admin notifications |
 | `SESSION_SECRET` | Random session secret |
+| `DATABASE_URL` | PostgreSQL connection string (auto-set by Replit) |
 
 ## Development
 
@@ -56,4 +57,9 @@ bash start-dev.sh
 Configured as a **VM (always-on)** deployment — required because the Telegram bot must stay running continuously.
 
 - **Build:** `cd artifacts/api-server && node ./build.mjs`
-- **Run:** `cd artifacts/api-server && PORT=5000 node --enable-source-maps ./dist/index.mjs`
+- **Run:** `PORT=3000 node --enable-source-maps artifacts/api-server/dist/index.mjs`
+
+## Notes
+
+- `WEBHOOK_URL` must be set to your deployment's public URL (e.g. `https://yourapp.replit.app`) to receive Telegram messages in production webhook mode.
+- PostgreSQL schema is managed with Drizzle ORM; run `pnpm --filter @workspace/db run push` to apply schema changes.
