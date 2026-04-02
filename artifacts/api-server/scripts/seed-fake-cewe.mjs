@@ -122,25 +122,29 @@ async function main() {
 
   console.log(`   Total updates diterima: ${allUpdates.length}`);
 
-  // Filter foto dari grup target
+  // Filter foto: dari grup ATAU dikirim langsung ke bot (private chat / forward)
   const photoUpdates = allUpdates.filter(u => {
     const msg = u.message || u.channel_post;
-    return msg && String(msg.chat.id) === String(groupChatId) && msg.photo;
+    return msg && msg.photo;
   });
 
-  console.log(`   Foto dari grup: ${photoUpdates.length} foto`);
+  const fromGroup   = photoUpdates.filter(u => String((u.message||u.channel_post).chat.id) === String(groupChatId));
+  const fromPrivate = photoUpdates.filter(u => String((u.message||u.channel_post).chat.id) !== String(groupChatId));
+
+  console.log(`   Foto dari grup: ${fromGroup.length} | Foto dikirim langsung ke bot: ${fromPrivate.length}`);
 
   if (photoUpdates.length === 0) {
-    console.error("\n❌ Tidak ada foto ditemukan dari grup.");
-    console.error("   Pastikan:");
-    console.error("   1. Bot sudah ditambahkan ke grup @swp_dtbs");
-    console.error("   2. Foto dikirim SETELAH bot bergabung");
-    console.error("   3. Webhook belum pernah aktif sebelum foto dikirim");
+    console.error("\n❌ Tidak ada foto ditemukan.");
+    console.error("   Solusi: forward 30 foto dari grup ke chat pribadi dengan bot, lalu jalankan script lagi.");
     process.exit(1);
   }
 
+  // Prioritaskan foto dari grup, kalau kosong pakai yang dikirim langsung
+  const selectedUpdates = fromGroup.length > 0 ? fromGroup : fromPrivate;
+  console.log(`   Menggunakan ${selectedUpdates.length} foto (${fromGroup.length > 0 ? "dari grup" : "dari chat langsung ke bot"})`);
+
   // Ambil file_id terbesar (kualitas tertinggi) dari setiap foto
-  const fileIds = photoUpdates.map(u => {
+  const fileIds = selectedUpdates.map(u => {
     const photos = (u.message || u.channel_post).photo;
     return photos[photos.length - 1].file_id; // ukuran terbesar
   });
