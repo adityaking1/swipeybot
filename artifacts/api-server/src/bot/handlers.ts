@@ -5,6 +5,7 @@ import {
   recordLike, checkMutualLike, createMatch, checkAndResetDailyLimit,
   incrementDailyUsed, addInviteLimit, getUserByInviteCode, hasAlreadyLiked,
   saveMessage, claimGroupBonus, getTotalUserCount,
+  getFakeUserByName, setFakeUserPhoto, getFakeUsersPhotoStatus,
 } from "./db.js";
 
 import {
@@ -848,6 +849,16 @@ export async function handlePhoto(bot: TelegramBot, msg: TelegramBot.Message) {
     await updateUser(telegramId, { photoFileId: photo.file_id, mediaType: "photo" });
     setState(telegramId, "idle");
     await bot.sendMessage(msg.chat.id, "✅ Foto berhasil diubah!", { reply_markup: mainMenuKeyboard });
+  } else if (state === "await_admin_photo") {
+    if (String(msg.from.id) !== ADMIN_ID) return;
+    const temp = getTempData(telegramId);
+    const targetId = temp.adminPhotoTarget;
+    if (!targetId) return;
+    const photo = msg.photo![msg.photo!.length - 1];
+    await setFakeUserPhoto(targetId, photo.file_id, "photo");
+    setState(telegramId, "idle");
+    clearTempData(telegramId);
+    await bot.sendMessage(msg.chat.id, `✅ Foto berhasil disimpan untuk *${temp.adminPhotoName}* (\`${targetId}\`)`, { parse_mode: "Markdown" });
   }
 }
 
@@ -863,6 +874,15 @@ export async function handleVideo(bot: TelegramBot, msg: TelegramBot.Message) {
     await updateUser(telegramId, { photoFileId: msg.video!.file_id, mediaType: "video" });
     setState(telegramId, "idle");
     await bot.sendMessage(msg.chat.id, "✅ Video berhasil diubah!", { reply_markup: mainMenuKeyboard });
+  } else if (state === "await_admin_photo") {
+    if (String(msg.from.id) !== ADMIN_ID) return;
+    const temp = getTempData(telegramId);
+    const targetId = temp.adminPhotoTarget;
+    if (!targetId) return;
+    await setFakeUserPhoto(targetId, msg.video!.file_id, "video");
+    setState(telegramId, "idle");
+    clearTempData(telegramId);
+    await bot.sendMessage(msg.chat.id, `✅ Video berhasil disimpan untuk *${temp.adminPhotoName}* (\`${targetId}\`)`, { parse_mode: "Markdown" });
   }
 }
 
@@ -928,4 +948,63 @@ async function finishRegistration(bot: TelegramBot, msg: TelegramBot.Message, te
       { parse_mode: "Markdown", reply_markup: mainMenuKeyboard }
     );
   }
+}
+
+export async function handleAdminPhotoCommand(bot: TelegramBot, msg: TelegramBot.Message, nameArg: string) {
+  const telegramId = String(msg.from!.id);
+  if (telegramId !== ADMIN_ID) {
+    await bot.sendMessage(msg.chat.id, "⛔ Bukan admin.");
+    return;
+  }
+
+  const name = nameArg.trim();
+  if (!name) {
+    await bot.sendMessage(msg.chat.id,
+      `❓ Cara pakai:\n/adminphoto <nama>\n\nContoh: /adminphoto alfi\n\nSesudah itu, kirim/forward fotonya.`
+    );
+    return;
+  }
+
+  const user = await getFakeUserByName(name);
+  if (!user) {
+    await bot.sendMessage(msg.chat.id, `❌ Fake user dengan nama *${name}* tidak ditemukan.\n\nCek /adminlist untuk daftar lengkap.`, { parse_mode: "Markdown" });
+    return;
+  }
+
+  setTempData(telegramId, { adminPhotoTarget: user.telegramId, adminPhotoName: user.name });
+  setState(telegramId, "await_admin_photo");
+
+  const hasPhoto = (user as any).photoFileId ? "✅ sudah ada foto" : "❌ belum ada foto";
+  await bot.sendMessage(msg.chat.id,
+    `📸 *Assign foto untuk:* ${user.name} (\`${user.telegramId}\`)\n${hasPhoto}\n\nSekarang kirim atau forward foto/video untuknya.`,
+    { parse_mode: "Markdown" }
+  );
+}
+
+export async function handleAdminListCommand(bot: TelegramBot, msg: TelegramBot.Message) {
+  const telegramId = String(msg.from!.id);
+  if (telegramId !== ADMIN_ID) {
+    await bot.sendMessage(msg.chat.id, "⛔ Bukan admin.");
+    return;
+  }
+
+  const users = await getFakeUsersPhotoStatus();
+  const withPhoto = users.filter(u => (u as any).photoFileId);
+  const noPhoto = users.filter(u => !(u as any).photoFileId);
+
+  let text = `📋 *Daftar Fake Users* (${users.length} total)\n`;
+  text += `✅ Sudah foto: ${withPhoto.length} | ❌ Belum foto: ${noPhoto.length}\n\n`;
+
+  if (noPhoto.length > 0) {
+    text += `*❌ Belum ada foto:*\n`;
+    noPhoto.forEach(u => { text += `• ${u.name} → /adminphoto ${u.name}\n`; });
+    text += "\n";
+  }
+
+  if (withPhoto.length > 0) {
+    text += `*✅ Sudah ada foto:*\n`;
+    withPhoto.forEach(u => { text += `• ${u.name}\n`; });
+  }
+
+  await bot.sendMessage(msg.chat.id, text, { parse_mode: "Markdown" });
 }

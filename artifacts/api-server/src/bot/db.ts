@@ -190,6 +190,32 @@ export async function getTotalUserCount(): Promise<number> {
   return UserModel.countDocuments({});
 }
 
+export async function getFakeUserByName(name: string) {
+  await db();
+  return UserModel.findOne({
+    telegramId: /^fake_/,
+    name: { $regex: new RegExp(`^${name}$`, "i") },
+  }).lean();
+}
+
+export async function setFakeUserPhoto(telegramId: string, photoFileId: string, mediaType: string) {
+  await db();
+  return UserModel.findOneAndUpdate(
+    { telegramId },
+    { $set: { photoFileId, mediaType } },
+    { new: true }
+  ).lean();
+}
+
+export async function getFakeUsersPhotoStatus() {
+  await db();
+  const fakeUsers = await UserModel.find({ telegramId: /^fake_/ })
+    .select("telegramId name photoFileId")
+    .sort({ telegramId: 1 })
+    .lean();
+  return fakeUsers;
+}
+
 export async function claimGroupBonus(telegramId: string) {
   await db();
   return UserModel.findOneAndUpdate(

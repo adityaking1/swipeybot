@@ -3,7 +3,7 @@ import cron from "node-cron";
 import {
   handleStart, handleMessage, handlePhoto, handleVideo,
   handleLikeCallback, handleSendMessageCallback, handleReportCallback,
-  handleCheckGroupCallback,
+  handleCheckGroupCallback, handleAdminPhotoCommand, handleAdminListCommand,
 } from "./handlers.js";
 import { resetAllDailyLimits, getUser } from "./db.js";
 import { connectMongo } from "./mongo.js";
@@ -43,9 +43,27 @@ export async function startBot(): Promise<TelegramBot | undefined> {
     }
   });
 
+  bot.onText(/\/adminphoto(?:\s+(.+))?/, async (msg, match) => {
+    try {
+      await handleAdminPhotoCommand(bot, msg, match?.[1] || "");
+    } catch (err) {
+      logger.error({ err }, "Error in /adminphoto handler");
+    }
+  });
+
+  bot.onText(/\/adminlist/, async (msg) => {
+    try {
+      await handleAdminListCommand(bot, msg);
+    } catch (err) {
+      logger.error({ err }, "Error in /adminlist handler");
+    }
+  });
+
   bot.on("message", async (msg) => {
     if (!msg.text && !msg.photo && !msg.video) return;
     if (msg.text?.startsWith("/start")) return;
+    if (msg.text?.startsWith("/adminphoto")) return;
+    if (msg.text?.startsWith("/adminlist")) return;
 
     try {
       if (msg.photo) {

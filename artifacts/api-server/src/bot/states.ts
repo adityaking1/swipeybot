@@ -17,7 +17,8 @@ export type BotState =
   | "await_edit_interest"
   | "browsing"
   | "await_send_message"
-  | "await_report_reason";
+  | "await_report_reason"
+  | "await_admin_photo";
 
 const userStates = new Map<string, BotState>();
 const userTempData = new Map<string, Record<string, string>>();
